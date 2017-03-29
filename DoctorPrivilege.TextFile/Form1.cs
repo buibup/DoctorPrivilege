@@ -27,7 +27,11 @@ namespace DoctorPrivilege.TextFile
         {
             this.Hide();
 
-            Helper.WriteTextFileToFTPServer("011");
+            //Write Local
+            Helper.WriteTextFile("011");
+
+            //Write sftp server
+            //Helper.WriteTextFileToSFTPServer("011");
             //Helper.WriteTextFileToFTPServer("012");
 
             this.Close();

@@ -17,7 +17,7 @@ namespace DoctorPrivilege.TextFile.Common
     {
         private static IDoctorRepository _doctorRepositor;
 
-        public static Doctor GetPropertyDoctor()
+        static Doctor GetPropertyDoctor()
         {
             Doctor doctor = new Doctor();
             Procedure procedure = new Procedure();
@@ -60,7 +60,66 @@ namespace DoctorPrivilege.TextFile.Common
             return new Tuple<List<string>, List<string>, List<string>>(procedureListString, comments, grades);
         }
 
-        public static void WriteTextFileToFTPServer(string buid)
+        public static void WriteTextFile(string buid)
+        {
+            _doctorRepositor = new DoctorRepository();
+            var doctors = _doctorRepositor.GetDoctorByBUID(buid);
+
+            Doctor proDoctor = GetPropertyDoctor();
+            doctors.Insert(0, proDoctor);
+
+            string pathfile = GetPathFile(buid);
+
+            using (StreamWriter writer = new StreamWriter(pathfile))
+            {
+                foreach(Doctor doctor in doctors)
+                {
+                    writer.WriteLine(
+                        doctor.DoctorID.Trim() + "|"
+                        + doctor.Specialty.Trim() + "|"
+                        + doctor.SubSpecialty.Trim() + "|"
+                        + doctor.Category.Trim() + "|"
+                        + doctor.ProcedureName.Trim() + "|"
+                        + doctor.Comment.Trim() + "|"
+                        + doctor.Grade.Trim() + "|"
+                        + doctor.Status.Trim() + "|"
+                        + doctor.ApprovedDate + "|"
+                        + doctor.ExpiredDate
+                        );
+                }
+            }
+
+        }
+
+        static string GetPathFile(string buid)
+        {
+            string pathfile = string.Empty;
+            string dateNow = DateTime.Now.ToString("yyyyMMdd");
+            string path = ConfigurationManager.AppSettings["path"];
+            string filename = ConfigurationManager.AppSettings["fileName"];
+
+            switch (buid)
+            {
+                case "011":
+                    filename = filename.Replace("{BUID}", buid);
+                    filename = filename.Replace("{BUNAME}", "SVH");
+                    path = path.Replace("{BUNAME}", "SVH");
+                    pathfile = path + filename + dateNow + ".txt";
+                    break;
+                case "012":
+                    filename = filename.Replace("{BUID}", buid);
+                    filename = filename.Replace("{BUNAME}", "SNH");
+                    path = path.Replace("{BUNAME}", "SNH");
+                    pathfile = path + filename + dateNow + ".txt";
+                    break;
+                default:
+                    break;
+            }
+
+            return pathfile;
+        }
+
+        public static void WriteTextFileToSFTPServer(string buid)
         {
             #region declare variable
             _doctorRepositor = new DoctorRepository();
@@ -76,7 +135,7 @@ namespace DoctorPrivilege.TextFile.Common
 
         }
 
-        public static Tuple<string, string, string, string, string> GetSFTP(string buid)
+        static Tuple<string, string, string, string, string> GetSFTP(string buid)
         {
             //File Name:	DoctorPrivilege_{BUID}_{BUNAME}_YYYYMMDD.txt
 
@@ -123,7 +182,7 @@ namespace DoctorPrivilege.TextFile.Common
             return new Tuple<string, string, string, string, string>(host, userName, password, workingdirectory,filename);
         }
 
-        public static void WritFileToSFTPServer(string host, string username, string password, string workingdirectory, string fileName, List<Doctor> doctors)
+        static void WritFileToSFTPServer(string host, string username, string password, string workingdirectory, string fileName, List<Doctor> doctors)
         {
 
             using (var client = new SftpClient(host, username, password))
@@ -152,9 +211,7 @@ namespace DoctorPrivilege.TextFile.Common
 
                 //เขียนข้อมูลลง .txt
                 client.WriteAllText(workingdirectory + fileName, data);
-
             }
-
         }
     }
 }
